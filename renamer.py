@@ -3,6 +3,31 @@ u'''rename arbitrary files and folders to a specified format'''
 import os
 import sys
 import re
+import argparse
+
+u'''
+renaming utility that will relentlessly break
+ - your LaTeX documents (if you include some files that were changed)
+ - webpages (in the improbable case that you are using an image or something)
+ - everything else, f.e.: if config files are changed
+
+but it will make clean filenames for your media files :)
+so use it selectively and check changes before applying them
+
+ - do not rename by default, use -n or --no-act by default
+ - do not traverse into subdirectories by default, use -r or --recurse for that
+ - be verbose by default, use -q or --quiet for this
+'''
+
+
+
+def verbose(msg):
+    if args.verbose is True:
+        print msg
+
+def debug(msg):
+    if args.debug is True:
+        print msg
 
 
 def needs_rename(filename):
@@ -13,25 +38,22 @@ def needs_rename(filename):
 
 def is_valid(check_entity, rootdir, entity, exclude_entities, exclude_regexes):
     entity_path = os.path.abspath(os.path.join(rootdir, entity))
-    # print "checking " + filepath
-    exclude_entities = ['.gitignore', '']
-    exclude_regex = [r'TODO.*', r'README.*', r'LICEN[SC]E.*', r'\..*']
     if check_entity(entity_path) and (not os.path.islink(entity_path)):
         try:
             index = exclude_entities.index(entity)
         except ValueError:
             for exclude_regex in exclude_regexes:
                 if re.match(exclude_regex, entity):
-                    print "     %s matches exclude regex %s" % (entity, exclude_regex)
+                    debug("     %s matches exclude regex %s" % (entity, exclude_regex))
                     return False
             return True
-        print "     %s matches exclude entry %s" % (entity, exclude_entities[index])
+        debug("     %s matches exclude entry %s" % (entity, exclude_entities[index]))
     return False
 
 
 def is_valid_file(dirname, filename):
     exclude_entities = ['.gitignore', '']
-    exclude_regexes = [r'TODO.*', r'README.*', r'LICEN[SC]E.*', r'\..*']
+    exclude_regexes = [r'^[A-Z]+$', r'.*VERSION.*', r'.*TODO.*', r'.*README.*', r'.*LICEN[SC]E.*', r'\..*']
     return is_valid(os.path.isfile, dirname, filename, exclude_entities, exclude_regexes)
 
 
@@ -49,11 +71,15 @@ def recursive_rename(rootdir, dirname):
         return True
 
     dirpath = os.path.abspath(os.path.join(rootdir, dirname))
-    print "traversing dir: %s" % os.path.join(rootdir, dirname)
+    debug("traversing dir: %s" % os.path.join(rootdir, dirname))
 
+    # attention! os.listdir returns unicode filenames
+    # what happens with chinese files, or russian, or malformed names or
+    # undecodable stuff?
+
+    # Why is the used directory called twice?
     for item in os.listdir(dirpath):
         recursive_rename(dirpath, item)
-    # finally check if the dir needs renaming
     return renamer(rootdir, dirname)
 
 
@@ -70,51 +96,64 @@ def make_name(name):
         foo.README (seriously)
     new_name = re.sub(r'\.(?!..?.?$)', '-', new_name) 
     #this is excluded because there is stuff like
-    #    .tar.gz and bzip2 aso.
+    #    .tar.gz and variations.
     '''
     new_name = re.sub(r'[\\\"\'\{\}\(\)\[\]]', '', new_name)
+
+    # check if deletion matched everything
+    if len(new_name) < 1:
+        return name
+
     return new_name
 
 
 def renamer(root, name):
-    if not is_valid_file(root, name) or is_valid_dir(root, name):
+    if not (is_valid_file(root, name) or is_valid_dir(root, name)):
         return False
 
-    print "%s file %s" % (is_valid_file(root, name), name)
-    print "%s dir %s" % (is_valid_dir(root, name), name)
-
-    new_name = needs_rename(name)
-    if not new_name:
+    if needs_rename(name) is False:
         return False
-    new_target = os.path.join(root, new_name)
+
+    new_target = os.path.join(root, make_name(name))
     if not os.path.exists(new_target):
-        # os.rename(os.path.join(root, name), os.path.join(root,
-        # make_name(name)))
-        print "renamed %s to %s" %\
-            (os.path.join(root, name), new_target)
-    return True
-
-
-def usage():
-    print "USAGE: x (PATH)"
+        try:
+            os.rename(os.path.join(root, name), new_target)
+        except KeyboardInterrupt:
+            pass
+        verbose("renamed %s to %s" % (os.path.join(root, name), new_target))
+        print "renamed %s to %s" % (os.path.join(root, name), new_target)
     return True
 
 
 def main():
+    global args
     # traverse top down because files of excluded dirs should be excluded
     # recursively traverse directories until no dirs in dir (dirs first)
     # rename all files if file is not in excluded files
     # visited all dirs? means the dirs in this directory can be renamed
 
-    seedlist = []
-    if len(sys.argv) > 1:
-        seedlist = sys.argv[1:]
-    else:
-        seedlist.append(os.curdir)
+    parser = argparse.ArgumentParser(description='Options are optional. All other values are passed in as the seedlist. Seedlist defaults to the current directory.')
+    parser.add_argument('-v', '--verbose',  dest='verbose', help='be verbose', action='store_true')
+    parser.add_argument('-d', '--debug',  dest='debug', help='be debuggy', action='store_true')
+    parser.add_argument('-r', '--recursive',  dest='recursive', help='recurse into directories', action='store_true')
+    parser.add_argument('-n', '--no-act',  dest='act', help='no act, only simulate (only useful with --verbose)', action='store_false')
 
-    for seed in seedlist:
-        seedpath = os.path.abspath(os.path.realpath(seed))
-        recursive_rename('', seedpath)
+    parser.add_argument('seedlist', nargs='*')
+    parser.set_defaults(verbose=False, recursive=False, act=True, debug=False)
+    args = parser.parse_args()
+
+    if len(args.seedlist) < 1:
+        args.seedlist.append(os.curdir)
+
+    try:
+        for seed in args.seedlist:
+            seedpath = os.path.abspath(os.path.realpath(seed))
+            recursive_rename('', seedpath)
+    except IOError:
+        # TODO: what todo here? head wants maybe 10 lines, therefore a Broken pipe emerges.
+        sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit(0)
     return True
 
 if __name__ == '__main__':
