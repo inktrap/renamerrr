@@ -16,4 +16,5 @@ I wont include a list of patterns or defaults, because …
 
 
 (If you seriously don't know why, please do not use this script!)
+Licence: GPL 2.0 <https://www.gnu.org/licenses/gpl-2.0.txt>
 

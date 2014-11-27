@@ -6,6 +6,10 @@ import re
 import argparse
 
 u'''
+Licence: GPL 2.0 <https://www.gnu.org/licenses/gpl-2.0.txt>
+'''
+
+u'''
 renaming utility that will relentlessly break
  - your LaTeX documents (if you include some files that have been changed)
  - webpages (in the improbable case that you are using an image or something)
