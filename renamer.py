@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 u'''rename arbitrary files and folders to a specified format'''
 import os
 import sys
@@ -7,26 +7,27 @@ import argparse
 
 u'''
 renaming utility that will relentlessly break
- - your LaTeX documents (if you include some files that were changed)
+ - your LaTeX documents (if you include some files that have been changed)
  - webpages (in the improbable case that you are using an image or something)
  - everything else, f.e.: if config files are changed
 
 but it will make clean filenames for your media files :)
 so use it selectively and check changes before applying them
 
+WILL FIX MAYBE
  - do not rename by default, use -n or --no-act by default
  - do not traverse into subdirectories by default, use -r or --recurse for that
  - be verbose by default, use -q or --quiet for this
 '''
 
 
-
 def verbose(msg):
-    if args.verbose is True:
+    if args.verbose == True:
         print msg
 
+
 def debug(msg):
-    if args.debug is True:
+    if args.debug == True:
         print msg
 
 
@@ -44,27 +45,33 @@ def is_valid(check_entity, rootdir, entity, exclude_entities, exclude_regexes):
         except ValueError:
             for exclude_regex in exclude_regexes:
                 if re.match(exclude_regex, entity):
-                    debug("     %s matches exclude regex %s" % (entity, exclude_regex))
+                    debug("     %s matches exclude regex %s" %
+                          (entity, exclude_regex))
                     return False
             return True
-        debug("     %s matches exclude entry %s" % (entity, exclude_entities[index]))
+        debug("     %s matches exclude entry %s" %
+              (entity, exclude_entities[index]))
     return False
 
 
 def is_valid_file(dirname, filename):
-    exclude_entities = ['.gitignore', '']
-    exclude_regexes = [r'^[A-Z]+$', r'.*VERSION.*', r'.*TODO.*', r'.*README.*', r'.*LICEN[SC]E.*', r'\..*']
-    return is_valid(os.path.isfile, dirname, filename, exclude_entities, exclude_regexes)
+    exclude_entities = ['.gitignore', 'Makefile']
+    exclude_regexes = [r'^[A-Z]+$', r'.*Makefile.*', r'.*VERSION.*',
+                       r'.BUGS.*', r'.*TODO.*',
+                       r'.*README.*', r'.*LICEN[SC]E.*', r'\..*']
+    return is_valid(os.path.isfile, dirname, filename,
+                    exclude_entities, exclude_regexes)
 
 
 def is_valid_dir(dirname, filename):
     exclude_entities = [
         'vagrant', 'opt', 'work', '.git', '.svn', '.hg', '.env']
-    exclude_regexes = ['\..*']
-    return is_valid(os.path.isdir, dirname, filename, exclude_entities, exclude_regexes)
+    exclude_regexes = [r'\..*']
+    return is_valid(os.path.isdir, dirname, filename,
+                    exclude_entities, exclude_regexes)
 
 
-def recursive_rename(rootdir, dirname):
+def recursive_rename(rootdir, dirname, recurse=True):
     if is_valid_file(rootdir, dirname):
         return renamer(rootdir, dirname)
     elif not is_valid_dir(rootdir, dirname):
@@ -77,9 +84,10 @@ def recursive_rename(rootdir, dirname):
     # what happens with chinese files, or russian, or malformed names or
     # undecodable stuff?
 
-    # Why is the used directory called twice?
-    for item in os.listdir(dirpath):
-        recursive_rename(dirpath, item)
+    if recurse == True:
+        # Why is the used directory called twice?
+        for item in os.listdir(dirpath):
+            recursive_rename(dirpath, item, True)
     return renamer(rootdir, dirname)
 
 
@@ -94,7 +102,7 @@ def make_name(name):
         foo.ps
         foo.c
         foo.README (seriously)
-    new_name = re.sub(r'\.(?!..?.?$)', '-', new_name) 
+    new_name = re.sub(r'\.(?!..?.?$)', '-', new_name)
     #this is excluded because there is stuff like
     #    .tar.gz and variations.
     '''
@@ -118,10 +126,10 @@ def renamer(root, name):
     if not os.path.exists(new_target):
         try:
             os.rename(os.path.join(root, name), new_target)
+            verbose("renamed %s to %s" %
+                    (os.path.join(root, name), new_target))
         except KeyboardInterrupt:
             pass
-        verbose("renamed %s to %s" % (os.path.join(root, name), new_target))
-        print "renamed %s to %s" % (os.path.join(root, name), new_target)
     return True
 
 
@@ -132,14 +140,25 @@ def main():
     # rename all files if file is not in excluded files
     # visited all dirs? means the dirs in this directory can be renamed
 
-    parser = argparse.ArgumentParser(description='Options are optional. All other values are passed in as the seedlist. Seedlist defaults to the current directory.')
-    parser.add_argument('-v', '--verbose',  dest='verbose', help='be verbose', action='store_true')
-    parser.add_argument('-d', '--debug',  dest='debug', help='be debuggy', action='store_true')
-    parser.add_argument('-r', '--recursive',  dest='recursive', help='recurse into directories', action='store_true')
-    parser.add_argument('-n', '--no-act',  dest='act', help='no act, only simulate (only useful with --verbose)', action='store_false')
+    print "(Obviously you can edit the source to remove the following check)"
+    print 'YES, I KNOW, that this script may brake my things and'
+    print "YES, I READ THE SOURCE! I hereby confirm these two facts!"
+    yes = raw_input("Type: yes!: ")
+    if yes != "yes!":
+        sys.exit(0)
 
-    parser.add_argument('seedlist', nargs='*')
+    parser = argparse.ArgumentParser(
+        description='Options are optional. All other values are passed in as the seedlist. Seedlist defaults to the current directory.')
     parser.set_defaults(verbose=False, recursive=False, act=True, debug=False)
+    parser.add_argument(
+        '-v', '--verbose',  dest='verbose', help='be verbose', action='store_true')
+    parser.add_argument(
+        '-d', '--debug',  dest='debug', help='be debuggy', action='store_true')
+    parser.add_argument('-r', '--recursive',  dest='recursive',
+                        help='recurse into directories', action='store_true')
+    parser.add_argument('-n', '--no-act',  dest='act',
+                        help='no act, only simulate (only useful with --verbose)', action='store_false')
+    parser.add_argument('seedlist', nargs='*')
     args = parser.parse_args()
 
     if len(args.seedlist) < 1:
@@ -148,9 +167,12 @@ def main():
     try:
         for seed in args.seedlist:
             seedpath = os.path.abspath(os.path.realpath(seed))
-            recursive_rename('', seedpath)
+            recursive_rename('', seedpath, args.recursive)
     except IOError:
-        # TODO: what todo here? head wants maybe 10 lines, therefore a Broken pipe emerges.
+        # TODO: what todo here? head wants
+        # maybe 10 lines, therefore a broken
+        # pipe emerges.
+
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(0)
