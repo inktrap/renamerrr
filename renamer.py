@@ -6,7 +6,7 @@ import re
 import argparse
 
 u'''
-Licence: GPL 2.0 <https://www.gnu.org/licenses/gpl-2.0.txt>
+License: GPL 2.0 <https://www.gnu.org/licenses/gpl-2.0.txt>
 '''
 
 u'''
