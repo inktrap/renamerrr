@@ -98,8 +98,7 @@ def recursive_rename(rootdir, dirname, recurse=True):
 def make_name(name):
     # maybe lowercasing everything is not good (see LaTeX or locales de_DE)
     name = name.lower()
-    new_name = re.sub(r'\s', '-', name)
-    new_name = re.sub(r'[-]+', '-', new_name)
+    # fix: delete first, then do other substitutions
     '''
     # do not delete dots that separate a filename ending:
         foo.pdf
@@ -111,6 +110,8 @@ def make_name(name):
     #    .tar.gz and variations.
     '''
     new_name = re.sub(r'[\\\"\'\{\}\(\)\[\]]', '', new_name)
+    new_name = re.sub(r'\s', '-', name)
+    new_name = re.sub(r'[-]+', '-', new_name)
 
     # check if deletion matched everything
     if len(new_name) < 1:
@@ -144,12 +145,14 @@ def main():
     # rename all files if file is not in excluded files
     # visited all dirs? means the dirs in this directory can be renamed
 
+    '''
     print "(Obviously you can edit the source to remove the following check)"
     print 'YES, I KNOW, that this script may brake my things and'
     print "YES, I READ THE SOURCE! I hereby confirm these two facts!"
     yes = raw_input("Type: yes!: ")
     if yes != "yes!":
         sys.exit(0)
+    '''
 
     parser = argparse.ArgumentParser(
         description='Options are optional. All other values are passed in as the seedlist. Seedlist defaults to the current directory.')

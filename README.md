@@ -1,25 +1,34 @@
 # renamerrr
 
-Simple script that recursively renames your files and folders. It won't follow
-symlinks, but recurses in all the folders that don't match an exclude. Think of
-it as a list for `rename`, but with excludes (regex and/or list). So it will
-turn:
+## What does renamerrr do?
+
+renamerrr is a simple script that recursively renames your files and folders.
+
+(Means: If you want to break things, you are welcome. But I am not responsible.
+You have been warned!)
+
+Think of it as a list for `rename`, but with excludes (regex and/or list-based). So
+it will turn:
 
  - `Filename in caps with Spaces--and-[something].doc` into `filename-in-caps-with-spaces-and-something.doc`
+ - but not in a dir like .git/ or .hg/ and also not if the file is named f.e. TODO.md or README.md
+ - and also not if the file is a symlink (and it won't follow symlinks)
 
 
-But obviously you can change all of that, so **READ THE CODE** before using it!
-I am in **NO WAY** responsible if you break something or if this script breaks!
+## Fork me, edit me, …
 
-Additionaly, there might be more than one opinion what constitutes a good naming
-practice for files or directories. Or which things you like to exclude … so
-**READ THE CODE** and change the rules accordingly.
-(F.e.: I don't use cvs anymore, but maybe you do.)
+There might be more than one (read: mine :)) opinion what constitutes a good
+naming practice for files or directories. Or which things someone would like to
+exclude … so **READ THE CODE** and change the rules accordingly. F.e.: I don't
+use cvs anymore, but maybe you do.
 
-**RTFC: Read The Fucking Code!**
 
-I wont include a list of patterns or defaults here, because …
+## Examples
 
-(If you seriously don't know why, please do not use this script!)
+Edit: I will include some examples in the near future.
 
-Licence: GPL 2.0 <https://www.gnu.org/licenses/gpl-2.0.txt>
+
+## Licence
+
+Currently GPL 2.0 <https://www.gnu.org/licenses/gpl-2.0.txt>
+
