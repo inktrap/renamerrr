@@ -98,7 +98,8 @@ def recursive_rename(rootdir, dirname, recurse=True):
 def make_name(name):
     # maybe lowercasing everything is not good (see LaTeX or locales de_DE)
     name = name.lower()
-    # fix: delete first, then do other substitutions
+    new_name = re.sub(r'\s', '-', name)
+    new_name = re.sub(r'[-]+', '-', new_name)
     '''
     # do not delete dots that separate a filename ending:
         foo.pdf
@@ -127,6 +128,12 @@ def renamer(root, name):
     if needs_rename(name) is False:
         return False
 
+    # - when you are in a directory: Foo and specify all by *
+    # - the new file/pathname operates on the whole path: foo/newfile
+    # - but foo does not exist
+    if not root:
+        root,name = os.path.split(name)
+
     new_target = os.path.join(root, make_name(name))
     if not os.path.exists(new_target):
         try:
@@ -135,6 +142,9 @@ def renamer(root, name):
                     (os.path.join(root, name), new_target))
         except KeyboardInterrupt:
             pass
+        except OSError:
+            # this should not happen
+            print "can not rename %s to %s" % (os.path.join(root, name), new_target)
     return True
 
 
