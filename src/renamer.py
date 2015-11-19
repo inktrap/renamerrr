@@ -1,15 +1,15 @@
-#!/usr/bin/env python2.7
-u'''rename arbitrary files and folders to a specified format'''
+#!/usr/bin/env python3.4
+'''rename arbitrary files and folders to a specified format'''
 import os
 import sys
 import re
 import argparse
 
-u'''
+'''
 License: GPL 2.0 <https://www.gnu.org/licenses/gpl-2.0.txt>
 '''
 
-u'''
+'''
 renaming utility that will relentlessly break
  - your LaTeX documents (if you include some files that have been changed)
  - webpages (in the improbable case that you are using an image or something)
@@ -24,15 +24,14 @@ WILL FIX MAYBE
  - be verbose by default, use -q or --quiet for this
 '''
 
-
 def verbose(msg):
     if args.verbose == True:
-        print msg
+        print(msg)
 
 
 def debug(msg):
     if args.debug == True:
-        print msg
+        print(msg)
 
 
 def needs_rename(filename):
@@ -144,7 +143,7 @@ def renamer(root, name):
             pass
         except OSError:
             # this should not happen
-            print "can not rename %s to %s" % (os.path.join(root, name), new_target)
+            print(("can not rename %s to %s" % (os.path.join(root, name), new_target)))
     return True
 
 
@@ -156,9 +155,9 @@ def main():
     # visited all dirs? means the dirs in this directory can be renamed
 
     '''
-    print "(Obviously you can edit the source to remove the following check)"
-    print 'YES, I KNOW, that this script may brake my things and'
-    print "YES, I READ THE SOURCE! I hereby confirm these two facts!"
+    print("(Obviously you can edit the source to remove the following check)")
+    print('YES, I KNOW, that this script may brake my things and')
+    print("YES, I READ THE SOURCE! I hereby confirm these two facts!")
     yes = raw_input("Type: yes!: ")
     if yes != "yes!":
         sys.exit(0)
