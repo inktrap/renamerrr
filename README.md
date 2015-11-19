@@ -1,5 +1,7 @@
 # renamerrr
 
+[![Build Status](https://travis-ci.org/inktrap/renamerrr.svg?branch=master)](https://travis-ci.org/inktrap/renamerrr)
+
 ## What does renamerrr do?
 
 renamerrr is a simple script that recursively renames your files and folders.
